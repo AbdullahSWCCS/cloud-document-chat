@@ -163,3 +163,15 @@ infra/main.json
 infra/main.test.json
 
 .venv310/
+
+# Local backend data and backups
+app/backend/local_documents/
+app/backend/*.bak
+app/backend/*.bak2
+app/backend/*.bak3
+app/backend/*.working.py
+app/backend/*.history-backup.py
+app/backend/*.search-backup
+app/frontend/**/*.working.*
+app/frontend/**/*.bak
+app/frontend/**/*.history-backup.*

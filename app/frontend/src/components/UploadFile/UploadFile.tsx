@@ -1,11 +1,9 @@
-import React, { useState, ChangeEvent } from "react";
+﻿import React, { useState, ChangeEvent } from "react";
 import { Button, Popover, PopoverTrigger, PopoverSurface, Label, Text } from "@fluentui/react-components";
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
-import { useMsal } from "@azure/msal-react";
 import { useTranslation } from "react-i18next";
 
 import { SimpleAPIResponse, uploadFileApi, deleteUploadedFileApi, listUploadedFilesApi } from "../../api";
-import { useLogin, getToken } from "../../authConfig";
 import styles from "./UploadFile.module.css";
 
 interface Props {
@@ -24,22 +22,13 @@ export const UploadFile: React.FC<Props> = ({ className, disabled }: Props) => {
     const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
     const { t } = useTranslation();
 
-    if (!useLogin) {
-        throw new Error("The UploadFile component requires useLogin to be true");
-    }
-
-    const client = useMsal().instance;
-
     // Handler for the "Manage file uploads" button
     const handleButtonClick = async () => {
         setIsCalloutVisible(!isCalloutVisible); // Toggle the Callout visibility
 
         // Update uploaded files by calling the API
         try {
-            const idToken = await getToken(client);
-            if (!idToken) {
-                throw new Error("No authentication token available");
-            }
+            const idToken = "";
             listUploadedFiles(idToken);
         } catch (error) {
             console.error(error);
@@ -59,10 +48,7 @@ export const UploadFile: React.FC<Props> = ({ className, disabled }: Props) => {
         setDeletionStatus({ ...deletionStatus, [filename]: "pending" });
 
         try {
-            const idToken = await getToken(client);
-            if (!idToken) {
-                throw new Error("No authentication token available");
-            }
+            const idToken = "";
 
             await deleteUploadedFileApi(filename, idToken);
             setDeletionStatus({ ...deletionStatus, [filename]: "success" });
@@ -85,10 +71,7 @@ export const UploadFile: React.FC<Props> = ({ className, disabled }: Props) => {
         formData.append("file", file);
 
         try {
-            const idToken = await getToken(client);
-            if (!idToken) {
-                throw new Error("No authentication token available");
-            }
+            const idToken = "";
             const response: SimpleAPIResponse = await uploadFileApi(formData, idToken);
             setUploadedFile(response);
             setIsUploading(false);
@@ -161,3 +144,4 @@ export const UploadFile: React.FC<Props> = ({ className, disabled }: Props) => {
         </div>
     );
 };
+

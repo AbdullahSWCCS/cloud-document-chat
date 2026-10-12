@@ -47,7 +47,19 @@ export const HistoryPanel = ({
         if (items.length === 0) {
             setHasMoreHistory(false);
         }
-        setHistory(prevHistory => [...prevHistory, ...items]);
+
+        setHistory(prevHistory => {
+            const uniqueHistory = new Map<string, HistoryMetaData>();
+
+            [...prevHistory, ...items].forEach(item => {
+                uniqueHistory.set(item.id, item);
+            });
+
+            return Array.from(uniqueHistory.values()).sort(
+                (a, b) => b.timestamp - a.timestamp
+            );
+        });
+
         setIsLoading(() => false);
     };
 

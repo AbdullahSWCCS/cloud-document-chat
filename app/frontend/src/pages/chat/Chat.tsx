@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+﻿import { useRef, useState, useEffect, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import {
@@ -36,6 +36,7 @@ import { LanguagePicker } from "../../i18n/LanguagePicker";
 import { Settings } from "../../components/Settings/Settings";
 
 const Chat = () => {
+    const historyIdRef = useRef<string | null>(null);
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
     const [promptTemplate, setPromptTemplate] = useState<string>("");
@@ -110,6 +111,7 @@ const Chat = () => {
         isPlaying,
         setIsPlaying
     };
+
 
     const getConfig = async () => {
         configApi().then(config => {
@@ -317,10 +319,28 @@ const Chat = () => {
                 // Only add to answers if we got content, otherwise restore question to input
                 if (parsedResponse.output_text) {
                     setAnswers([...answers, [question, parsedResponse]]);
-                    if (typeof parsedResponse.session_state === "string" && parsedResponse.session_state !== "") {
-                        const token = client ? await getToken(client) : undefined;
-                        historyManager.addItem(parsedResponse.session_state, [...answers, [question, parsedResponse]], token);
+                    if (
+                        typeof parsedResponse.session_state === "string" &&
+                        parsedResponse.session_state !== ""
+                    ) {
+                        historyIdRef.current = parsedResponse.session_state;
                     }
+
+                    if (!historyIdRef.current) {
+                        historyIdRef.current = crypto.randomUUID();
+                    }
+
+                    const historyId = historyIdRef.current;
+
+                    const token = client ? await getToken(client) : undefined;
+
+                    void historyManager.addItem(
+                        historyId,
+                        [...answers, [question, parsedResponse as ChatAppResponse]],
+                        token
+                    ).catch(error => {
+                        console.error("Failed to save chat history:", error);
+                    });
                 } else {
                     // Stopped before any content arrived - restore question to input
                     lastQuestionRef.current = answers.length > 0 ? answers[answers.length - 1][0] : "";
@@ -332,10 +352,28 @@ const Chat = () => {
                     throw Error(parsedResponse.error);
                 }
                 setAnswers([...answers, [question, parsedResponse as ChatAppResponse]]);
-                if (typeof parsedResponse.session_state === "string" && parsedResponse.session_state !== "") {
-                    const token = client ? await getToken(client) : undefined;
-                    historyManager.addItem(parsedResponse.session_state, [...answers, [question, parsedResponse as ChatAppResponse]], token);
+                if (
+                    typeof parsedResponse.session_state === "string" &&
+                    parsedResponse.session_state !== ""
+                ) {
+                    historyIdRef.current = parsedResponse.session_state;
                 }
+
+                if (!historyIdRef.current) {
+                    historyIdRef.current = crypto.randomUUID();
+                }
+
+                const historyId = historyIdRef.current;
+
+                const token = client ? await getToken(client) : undefined;
+
+                void historyManager.addItem(
+                    historyId,
+                    [...answers, [question, parsedResponse as ChatAppResponse]],
+                    token
+                ).catch(error => {
+                    console.error("Failed to save chat history:", error);
+                });
             }
             setSpeechUrls([...speechUrls, null]);
         } catch (e) {
@@ -351,8 +389,8 @@ const Chat = () => {
             setAbortController(null);
         }
     };
-
     const clearChat = () => {
+        historyIdRef.current = null;
         lastQuestionRef.current = "";
         error && setError(undefined);
         setActiveCitation(undefined);
@@ -545,7 +583,7 @@ const Chat = () => {
                 </div>
                 <div className={styles.commandsContainer}>
                     <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                    {showUserUpload && <UploadFile className={styles.commandButton} disabled={!loggedIn} />}
+                    {showUserUpload && <UploadFile className={styles.commandButton} disabled={false} />}
                     <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
                 </div>
             </div>
@@ -745,3 +783,4 @@ const Chat = () => {
 };
 
 export default Chat;
+

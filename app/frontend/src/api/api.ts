@@ -79,11 +79,21 @@ export async function getSpeechApi(text: string): Promise<string | null> {
         .then(blob => (blob ? URL.createObjectURL(blob) : null));
 }
 
+
 export function getCitationFilePath(citation: string): string {
-    // If there are parentheses at end of citation, remove part in parentheses
-    const cleanedCitation = citation.replace(/\s*\(.*?\)\s*$/, "").trim();
-    return `${BACKEND_URI}/content/${cleanedCitation}`;
+    const pageMatch = citation.match(/,\s*page\s+(\d+)/i);
+    const cleanedCitation = citation
+        .replace(/,\s*page\s+\d+/i, "")
+        .replace(/\s*\(.*?\)\s*$/, "")
+        .trim();
+
+    const filePath = `${BACKEND_URI}/content/${encodeURIComponent(cleanedCitation)}`;
+
+    return pageMatch
+        ? `${filePath}#page=${pageMatch[1]}`
+        : filePath;
 }
+
 
 export async function uploadFileApi(request: FormData, idToken: string): Promise<SimpleAPIResponse> {
     const response = await fetchWithAuthRedirect("/upload", {

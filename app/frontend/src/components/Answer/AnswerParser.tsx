@@ -117,7 +117,7 @@ const collectCitations = (answer: ChatAppResponse, isStreaming: boolean): { frag
             return;
         }
 
-        const isValidCitation = possibleCitations.some(citation => citation.endsWith(part));
+        const isValidCitation = possibleCitations.some(citation => citation === part || citation.startsWith(`${part}, page `));
         if (!isValidCitation) {
             fragments.push({ type: "text", value: `[${part}]` });
             return;
@@ -125,7 +125,11 @@ const collectCitations = (answer: ChatAppResponse, isStreaming: boolean): { frag
 
         // Resolve SharePoint filename to URL if applicable
         const resolvedReference = resolveSharePointUrl(part);
+	const pageCitation = possibleCitations.find(
+    	citation => citation.startsWith(`${part}, page `)
+	);
 
+const citationReference = pageCitation || part;
         // Check if this resolved reference already exists
         const existing = citationMap.get(resolvedReference);
         if (existing) {
@@ -141,7 +145,7 @@ const collectCitations = (answer: ChatAppResponse, isStreaming: boolean): { frag
         const activityLabel = backendDetail?.type ? activityTypeLabels[backendDetail.type] || backendDetail.type : undefined;
 
         const detail: CitationDetail = {
-            reference: resolvedReference,
+            reference: pageCitation ? pageCitation : resolvedReference,
             index: citationList.length + 1,
             isWeb: isWebCitation(resolvedReference),
             activityId: activityId !== undefined ? String(activityId) : undefined,
