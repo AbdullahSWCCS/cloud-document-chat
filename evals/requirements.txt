@@ -9,7 +9,7 @@ langchain==0.3.30
 azure-ai-evaluation>=1.18.0
 azure-search-documents
 azure-identity
-openai>=1.56.1
+openai>=3.26.1
 typer
 jmespath
 pandas
